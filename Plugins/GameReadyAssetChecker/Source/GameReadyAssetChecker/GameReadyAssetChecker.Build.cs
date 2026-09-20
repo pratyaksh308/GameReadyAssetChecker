@@ -41,6 +41,7 @@ public class GameReadyAssetChecker : ModuleRules
 				"UnrealEd",
 				"AssetRegistry",
 				"ToolMenus",
+                "EditorFramework",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

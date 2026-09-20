@@ -2,6 +2,9 @@
 
 #include "GameReadyAssetChecker.h"
 #include "ToolMenus.h"
+#include "GameReadyAssetCheckerWindow.h"
+#include "Framework/Application/SlateApplication.h"
+#include "Widgets/SWindow.h"
 
 #define LOCTEXT_NAMESPACE "FGameReadyAssetCheckerModule"
 
@@ -40,11 +43,17 @@ void FGameReadyAssetCheckerModule::RegisterMenus()
         FToolUIActionChoice(
             FExecuteAction::CreateLambda([]()
                 {
-                    UE_LOG(
-                        LogTemp,
-                        Log,
-                        TEXT("Game-Ready Asset Checker menu clicked.")
+                    TSharedRef<SWindow> Window = SNew(SWindow)
+                        .Title(FText::FromString(TEXT("Game-Ready Asset Checker")))
+                        .ClientSize(FVector2D(700.0f, 500.0f))
+                        .SupportsMaximize(true)
+                        .SupportsMinimize(false);
+
+                    Window->SetContent(
+                        SNew(SGameReadyAssetCheckerWindow)
                     );
+
+                    FSlateApplication::Get().AddWindow(Window);
                 })
         )
     );
