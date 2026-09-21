@@ -42,6 +42,7 @@ public class GameReadyAssetChecker : ModuleRules
 				"AssetRegistry",
 				"ToolMenus",
                 "EditorFramework",
+                "ContentBrowser",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
