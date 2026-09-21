@@ -29,3 +29,6 @@ Thumbs.db
 *.sln
 *.slnx
 .vscode/
+
+# Unreal test project content
+/Content/
