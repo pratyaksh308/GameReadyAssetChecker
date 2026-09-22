@@ -79,6 +79,7 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
 
             if (StaticMesh)
             {
+                // Collision check
                 UBodySetup* BodySetup = StaticMesh->GetBodySetup();
 
                 if (!BodySetup)
@@ -119,6 +120,29 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
                             *Asset.AssetName.ToString()
                         );
                     }
+                }
+
+                // LOD check
+                const int32 NumLODs = StaticMesh->GetNumLODs();
+
+                if (NumLODs > 1)
+                {
+                    UE_LOG(
+                        LogTemp,
+                        Log,
+                        TEXT("Game-Ready Asset Checker: %s - PASS: %d LODs found."),
+                        *Asset.AssetName.ToString(),
+                        NumLODs
+                    );
+                }
+                else
+                {
+                    UE_LOG(
+                        LogTemp,
+                        Warning,
+                        TEXT("Game-Ready Asset Checker: %s - WARNING: No additional LOD found."),
+                        *Asset.AssetName.ToString()
+                    );
                 }
             }
         }
