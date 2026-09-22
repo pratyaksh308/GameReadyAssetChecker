@@ -3,6 +3,9 @@
 #include "IContentBrowserSingleton.h"
 #include "Engine/StaticMesh.h"
 #include "PhysicsEngine/BodySetup.h"
+#include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstance.h"
+#include "Engine/Texture2D.h"
 
 void SGameReadyAssetCheckerWindow::Construct(const FArguments& InArgs)
 {
@@ -87,7 +90,10 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
                     UE_LOG(
                         LogTemp,
                         Warning,
-                        TEXT("Game-Ready Asset Checker: %s - ERROR: No collision BodySetup found."),
+                        TEXT(
+                            "Game-Ready Asset Checker: %s - "
+                            "ERROR: No collision BodySetup found."
+                        ),
                         *Asset.AssetName.ToString()
                     );
                 }
@@ -107,7 +113,10 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
                         UE_LOG(
                             LogTemp,
                             Log,
-                            TEXT("Game-Ready Asset Checker: %s - PASS: Simple collision found."),
+                            TEXT(
+                                "Game-Ready Asset Checker: %s - "
+                                "PASS: Simple collision found."
+                            ),
                             *Asset.AssetName.ToString()
                         );
                     }
@@ -116,7 +125,10 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
                         UE_LOG(
                             LogTemp,
                             Warning,
-                            TEXT("Game-Ready Asset Checker: %s - WARNING: No simple collision found."),
+                            TEXT(
+                                "Game-Ready Asset Checker: %s - "
+                                "WARNING: No simple collision found."
+                            ),
                             *Asset.AssetName.ToString()
                         );
                     }
@@ -130,7 +142,10 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
                     UE_LOG(
                         LogTemp,
                         Log,
-                        TEXT("Game-Ready Asset Checker: %s - PASS: %d LODs found."),
+                        TEXT(
+                            "Game-Ready Asset Checker: %s - "
+                            "PASS: %d LODs found."
+                        ),
                         *Asset.AssetName.ToString(),
                         NumLODs
                     );
@@ -140,7 +155,134 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
                     UE_LOG(
                         LogTemp,
                         Warning,
-                        TEXT("Game-Ready Asset Checker: %s - WARNING: No additional LOD found."),
+                        TEXT(
+                            "Game-Ready Asset Checker: %s - "
+                            "WARNING: No additional LOD found."
+                        ),
+                        *Asset.AssetName.ToString()
+                    );
+                }
+
+                // Texture resolution check
+                bool bFoundLargeTexture = false;
+
+                const TArray<FStaticMaterial>& StaticMaterials =
+                    StaticMesh->GetStaticMaterials();
+
+                for (const FStaticMaterial& StaticMaterial : StaticMaterials)
+                {
+                    UMaterialInterface* Material =
+                        StaticMaterial.MaterialInterface;
+
+                    if (!Material)
+                    {
+                        continue;
+                    }
+
+                    // Material instances store their texture overrides
+                    // directly in TextureParameterValues.
+                    if (UMaterialInstance* MaterialInstance =
+                        Cast<UMaterialInstance>(Material))
+                    {
+                        for (const FTextureParameterValue& Parameter :
+                            MaterialInstance->TextureParameterValues)
+                        {
+                            UTexture2D* Texture2D =
+                                Cast<UTexture2D>(Parameter.ParameterValue);
+
+                            if (!Texture2D)
+                            {
+                                continue;
+                            }
+
+                            // Use the imported/source dimensions rather
+                            // than GetSizeX/GetSizeY because streamed
+                            // textures may currently have only a small
+                            // mip resident in memory.
+                            const FIntPoint ImportedSize =
+                                Texture2D->GetImportedSize();
+
+                            const int32 Width = ImportedSize.X;
+                            const int32 Height = ImportedSize.Y;
+
+                            if (Width >= 4096 || Height >= 4096)
+                            {
+                                bFoundLargeTexture = true;
+
+                                UE_LOG(
+                                    LogTemp,
+                                    Warning,
+                                    TEXT(
+                                        "Game-Ready Asset Checker: %s - "
+                                        "WARNING: Large texture found - "
+                                        "%s (%dx%d)."
+                                    ),
+                                    *Asset.AssetName.ToString(),
+                                    *Texture2D->GetName(),
+                                    Width,
+                                    Height
+                                );
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Base material fallback.
+                        TArray<UTexture*> UsedTextures;
+
+                        Material->GetUsedTextures(
+                            UsedTextures,
+                            TOptional<EMaterialQualityLevel::Type>(),
+                            TOptional<EShaderPlatform>()
+                        );
+
+                        for (UTexture* Texture : UsedTextures)
+                        {
+                            UTexture2D* Texture2D =
+                                Cast<UTexture2D>(Texture);
+
+                            if (!Texture2D)
+                            {
+                                continue;
+                            }
+
+                            const FIntPoint ImportedSize =
+                                Texture2D->GetImportedSize();
+
+                            const int32 Width = ImportedSize.X;
+                            const int32 Height = ImportedSize.Y;
+
+                            if (Width >= 4096 || Height >= 4096)
+                            {
+                                bFoundLargeTexture = true;
+
+                                UE_LOG(
+                                    LogTemp,
+                                    Warning,
+                                    TEXT(
+                                        "Game-Ready Asset Checker: %s - "
+                                        "WARNING: Large texture found - "
+                                        "%s (%dx%d)."
+                                    ),
+                                    *Asset.AssetName.ToString(),
+                                    *Texture2D->GetName(),
+                                    Width,
+                                    Height
+                                );
+                            }
+                        }
+                    }
+                }
+
+                if (!bFoundLargeTexture)
+                {
+                    UE_LOG(
+                        LogTemp,
+                        Log,
+                        TEXT(
+                            "Game-Ready Asset Checker: %s - PASS: "
+                            "No textures at or above 4096x4096 found."
+                        ),
                         *Asset.AssetName.ToString()
                     );
                 }
@@ -151,7 +293,9 @@ void SGameReadyAssetCheckerWindow::CheckStaticMeshes(
     UE_LOG(
         LogTemp,
         Log,
-        TEXT("Game-Ready Asset Checker: %d Static Mesh(es) found."),
+        TEXT(
+            "Game-Ready Asset Checker: %d Static Mesh(es) found."
+        ),
         StaticMeshCount
     );
 }
