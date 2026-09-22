@@ -17,4 +17,6 @@ private:
 	FReply OnScanSelectedAssetsClicked();
 
 	TSharedPtr<STextBlock> SelectedAssetsText;
+
+	void CheckStaticMeshes(const TArray<FAssetData>& SelectedAssets);
 };
