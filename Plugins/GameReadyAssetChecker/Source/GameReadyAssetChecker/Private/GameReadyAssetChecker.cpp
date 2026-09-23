@@ -2,7 +2,7 @@
 
 #include "GameReadyAssetChecker.h"
 #include "ToolMenus.h"
-#include "GameReadyAssetCheckerWindow.h"
+#include "Window.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/SWindow.h"
 
