@@ -176,8 +176,22 @@ namespace GameReadyAssetCheckerChecks
                 UMaterialInterface* Material =
                     StaticMaterial.MaterialInterface;
 
+                // ========================================================
+                // Missing / invalid material reference
+                // ========================================================
+
                 if (!Material)
                 {
+                    UE_LOG(
+                        LogTemp,
+                        Error,
+                        TEXT(
+                            "Game-Ready Asset Checker: %s - "
+                            "ERROR: Static Mesh has a missing material reference."
+                        ),
+                        *Asset.AssetName.ToString()
+                    );
+
                     continue;
                 }
 
@@ -211,6 +225,38 @@ namespace GameReadyAssetCheckerChecks
                             TEXT(
                                 "Game-Ready Asset Checker: %s - "
                                 "WARNING: Material Instance should start with MI_."
+                            ),
+                            *MaterialName
+                        );
+                    }
+
+                    // ====================================================
+                    // Missing / invalid Material Instance parent
+                    // ====================================================
+
+                    UMaterialInterface* ParentMaterial =
+                        MaterialInstance->Parent;
+
+                    if (!ParentMaterial)
+                    {
+                        UE_LOG(
+                            LogTemp,
+                            Error,
+                            TEXT(
+                                "Game-Ready Asset Checker: %s - "
+                                "ERROR: Material Instance has a missing parent material."
+                            ),
+                            *MaterialName
+                        );
+                    }
+                    else
+                    {
+                        UE_LOG(
+                            LogTemp,
+                            Log,
+                            TEXT(
+                                "Game-Ready Asset Checker: %s - "
+                                "PASS: Material Instance parent reference found."
                             ),
                             *MaterialName
                         );
