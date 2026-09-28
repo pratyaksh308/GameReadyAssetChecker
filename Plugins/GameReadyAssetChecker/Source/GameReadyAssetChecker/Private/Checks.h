@@ -1,10 +1,27 @@
 #pragma once
-#pragma once
 
 #include "AssetRegistry/AssetData.h"
 #include "CoreMinimal.h"
 
 namespace GameReadyAssetCheckerChecks
 {
-    void RunChecks(const TArray<FAssetData>& SelectedAssets);
+    enum class ECheckSeverity
+    {
+        Passed,
+        Warning,
+        Error
+    };
+
+    struct FCheckResult
+    {
+        FString AssetName;
+        ECheckSeverity Severity;
+        FString Problem;
+        FString WhyItMatters;
+        FString SuggestedAction;
+    };
+
+    TArray<FCheckResult> RunChecks(
+        const TArray<FAssetData>& SelectedAssets
+    );
 }

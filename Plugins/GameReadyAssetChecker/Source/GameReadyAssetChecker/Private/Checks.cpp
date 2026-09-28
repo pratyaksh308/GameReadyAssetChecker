@@ -9,8 +9,11 @@
 
 namespace GameReadyAssetCheckerChecks
 {
-    void RunChecks(const TArray<FAssetData>& SelectedAssets)
+    TArray<FCheckResult> RunChecks(
+        const TArray<FAssetData>& SelectedAssets)
     {
+        TArray<FCheckResult> Results;
+
         int32 StaticMeshCount = 0;
 
         for (const FAssetData& Asset : SelectedAssets)
@@ -22,6 +25,9 @@ namespace GameReadyAssetCheckerChecks
 
             StaticMeshCount++;
 
+            const FString AssetName =
+                Asset.AssetName.ToString();
+
             UE_LOG(
                 LogTemp,
                 Log,
@@ -29,7 +35,7 @@ namespace GameReadyAssetCheckerChecks
                     "Game-Ready Asset Checker: "
                     "Static Mesh found - %s"
                 ),
-                *Asset.AssetName.ToString()
+                *AssetName
             );
 
             UStaticMesh* StaticMesh =
@@ -44,7 +50,8 @@ namespace GameReadyAssetCheckerChecks
             // Collision check
             // ============================================================
 
-            UBodySetup* BodySetup = StaticMesh->GetBodySetup();
+            UBodySetup* BodySetup =
+                StaticMesh->GetBodySetup();
 
             if (!BodySetup)
             {
@@ -55,7 +62,17 @@ namespace GameReadyAssetCheckerChecks
                         "Game-Ready Asset Checker: %s - "
                         "ERROR: No collision BodySetup found."
                     ),
-                    *Asset.AssetName.ToString()
+                    *AssetName
+                );
+
+                Results.Add(
+                    {
+                        AssetName,
+                        ECheckSeverity::Error,
+                        TEXT("No collision BodySetup found."),
+                        TEXT("The Static Mesh does not have a usable collision setup."),
+                        TEXT("Add or generate collision for the Static Mesh.")
+                    }
                 );
             }
             else
@@ -79,7 +96,17 @@ namespace GameReadyAssetCheckerChecks
                             "Game-Ready Asset Checker: %s - "
                             "PASS: Simple collision found."
                         ),
-                        *Asset.AssetName.ToString()
+                        *AssetName
+                    );
+
+                    Results.Add(
+                        {
+                            AssetName,
+                            ECheckSeverity::Passed,
+                            TEXT("Simple collision found."),
+                            TEXT("The Static Mesh has usable simple collision geometry."),
+                            TEXT("No action required.")
+                        }
                     );
                 }
                 else
@@ -91,7 +118,17 @@ namespace GameReadyAssetCheckerChecks
                             "Game-Ready Asset Checker: %s - "
                             "WARNING: No simple collision found."
                         ),
-                        *Asset.AssetName.ToString()
+                        *AssetName
+                    );
+
+                    Results.Add(
+                        {
+                            AssetName,
+                            ECheckSeverity::Warning,
+                            TEXT("No simple collision found."),
+                            TEXT("The Static Mesh may not have usable collision for gameplay or physics."),
+                            TEXT("Add or generate simple collision for the Static Mesh.")
+                        }
                     );
                 }
             }
@@ -112,8 +149,21 @@ namespace GameReadyAssetCheckerChecks
                         "Game-Ready Asset Checker: %s - "
                         "PASS: %d LODs found."
                     ),
-                    *Asset.AssetName.ToString(),
+                    *AssetName,
                     NumLODs
+                );
+
+                Results.Add(
+                    {
+                        AssetName,
+                        ECheckSeverity::Passed,
+                        FString::Printf(
+                            TEXT("%d LODs found."),
+                            NumLODs
+                        ),
+                        TEXT("The Static Mesh has additional LOD levels available."),
+                        TEXT("No action required.")
+                    }
                 );
             }
             else
@@ -125,7 +175,17 @@ namespace GameReadyAssetCheckerChecks
                         "Game-Ready Asset Checker: %s - "
                         "WARNING: No additional LOD found."
                     ),
-                    *Asset.AssetName.ToString()
+                    *AssetName
+                );
+
+                Results.Add(
+                    {
+                        AssetName,
+                        ECheckSeverity::Warning,
+                        TEXT("No additional LOD found."),
+                        TEXT("Additional LODs can reduce rendering cost when the mesh is viewed from a distance."),
+                        TEXT("Consider adding an additional LOD if appropriate for the asset.")
+                    }
                 );
             }
 
@@ -147,6 +207,16 @@ namespace GameReadyAssetCheckerChecks
                     ),
                     *StaticMeshName
                 );
+
+                Results.Add(
+                    {
+                        AssetName,
+                        ECheckSeverity::Passed,
+                        TEXT("Static Mesh naming convention is valid."),
+                        TEXT("The asset follows the expected Unreal naming convention."),
+                        TEXT("No action required.")
+                    }
+                );
             }
             else
             {
@@ -158,6 +228,16 @@ namespace GameReadyAssetCheckerChecks
                         "WARNING: Static Mesh should start with SM_."
                     ),
                     *StaticMeshName
+                );
+
+                Results.Add(
+                    {
+                        AssetName,
+                        ECheckSeverity::Warning,
+                        TEXT("Static Mesh should start with SM_."),
+                        TEXT("Consistent asset naming makes assets easier to identify and manage."),
+                        TEXT("Rename the Static Mesh using the SM_ prefix.")
+                    }
                 );
             }
 
@@ -189,7 +269,17 @@ namespace GameReadyAssetCheckerChecks
                             "Game-Ready Asset Checker: %s - "
                             "ERROR: Static Mesh has a missing material reference."
                         ),
-                        *Asset.AssetName.ToString()
+                        *AssetName
+                    );
+
+                    Results.Add(
+                        {
+                            AssetName,
+                            ECheckSeverity::Error,
+                            TEXT("Static Mesh has a missing material reference."),
+                            TEXT("A material slot does not have a valid material assigned."),
+                            TEXT("Assign a valid Material or Material Instance to the material slot.")
+                        }
                     );
 
                     continue;
@@ -216,6 +306,19 @@ namespace GameReadyAssetCheckerChecks
                             ),
                             *MaterialName
                         );
+
+                        Results.Add(
+                            {
+                                AssetName,
+                                ECheckSeverity::Passed,
+                                FString::Printf(
+                                    TEXT("%s follows the Material Instance naming convention."),
+                                    *MaterialName
+                                ),
+                                TEXT("The Material Instance follows the expected Unreal naming convention."),
+                                TEXT("No action required.")
+                            }
+                        );
                     }
                     else
                     {
@@ -227,6 +330,19 @@ namespace GameReadyAssetCheckerChecks
                                 "WARNING: Material Instance should start with MI_."
                             ),
                             *MaterialName
+                        );
+
+                        Results.Add(
+                            {
+                                AssetName,
+                                ECheckSeverity::Warning,
+                                FString::Printf(
+                                    TEXT("%s should start with MI_."),
+                                    *MaterialName
+                                ),
+                                TEXT("Consistent material naming makes assets easier to identify and manage."),
+                                TEXT("Rename the Material Instance using the MI_ prefix.")
+                            }
                         );
                     }
 
@@ -248,6 +364,19 @@ namespace GameReadyAssetCheckerChecks
                             ),
                             *MaterialName
                         );
+
+                        Results.Add(
+                            {
+                                AssetName,
+                                ECheckSeverity::Error,
+                                FString::Printf(
+                                    TEXT("%s has a missing parent material."),
+                                    *MaterialName
+                                ),
+                                TEXT("A Material Instance depends on its parent material to provide its base material setup."),
+                                TEXT("Assign a valid parent material to the Material Instance.")
+                            }
+                        );
                     }
                     else
                     {
@@ -259,6 +388,19 @@ namespace GameReadyAssetCheckerChecks
                                 "PASS: Material Instance parent reference found."
                             ),
                             *MaterialName
+                        );
+
+                        Results.Add(
+                            {
+                                AssetName,
+                                ECheckSeverity::Passed,
+                                FString::Printf(
+                                    TEXT("%s has a valid parent material reference."),
+                                    *MaterialName
+                                ),
+                                TEXT("The Material Instance has a valid parent material."),
+                                TEXT("No action required.")
+                            }
                         );
                     }
 
@@ -297,6 +439,19 @@ namespace GameReadyAssetCheckerChecks
                                 ),
                                 *TextureName
                             );
+
+                            Results.Add(
+                                {
+                                    AssetName,
+                                    ECheckSeverity::Passed,
+                                    FString::Printf(
+                                        TEXT("%s follows the Texture naming convention."),
+                                        *TextureName
+                                    ),
+                                    TEXT("The texture follows the expected Unreal naming convention."),
+                                    TEXT("No action required.")
+                                }
+                            );
                         }
                         else
                         {
@@ -308,6 +463,19 @@ namespace GameReadyAssetCheckerChecks
                                     "WARNING: Texture should start with T_."
                                 ),
                                 *TextureName
+                            );
+
+                            Results.Add(
+                                {
+                                    AssetName,
+                                    ECheckSeverity::Warning,
+                                    FString::Printf(
+                                        TEXT("%s should start with T_."),
+                                        *TextureName
+                                    ),
+                                    TEXT("Consistent texture naming makes assets easier to identify and manage."),
+                                    TEXT("Rename the texture using the T_ prefix.")
+                                }
                             );
                         }
 
@@ -335,10 +503,27 @@ namespace GameReadyAssetCheckerChecks
                                     "WARNING: Large texture found - "
                                     "%s (%dx%d)."
                                 ),
-                                *Asset.AssetName.ToString(),
+                                *AssetName,
                                 *Texture2D->GetName(),
                                 Width,
                                 Height
+                            );
+
+                            Results.Add(
+                                {
+                                    AssetName,
+                                    ECheckSeverity::Warning,
+                                    FString::Printf(
+                                        TEXT(
+                                            "Large texture found - %s (%dx%d)."
+                                        ),
+                                        *Texture2D->GetName(),
+                                        Width,
+                                        Height
+                                    ),
+                                    TEXT("Very large textures can increase memory usage and may be unnecessary for the asset."),
+                                    TEXT("Consider reducing the texture resolution if the asset does not require it.")
+                                }
                             );
                         }
                     }
@@ -361,6 +546,19 @@ namespace GameReadyAssetCheckerChecks
                             ),
                             *MaterialName
                         );
+
+                        Results.Add(
+                            {
+                                AssetName,
+                                ECheckSeverity::Passed,
+                                FString::Printf(
+                                    TEXT("%s follows the Material naming convention."),
+                                    *MaterialName
+                                ),
+                                TEXT("The Material follows the expected Unreal naming convention."),
+                                TEXT("No action required.")
+                            }
+                        );
                     }
                     else
                     {
@@ -372,6 +570,19 @@ namespace GameReadyAssetCheckerChecks
                                 "WARNING: Material should start with M_."
                             ),
                             *MaterialName
+                        );
+
+                        Results.Add(
+                            {
+                                AssetName,
+                                ECheckSeverity::Warning,
+                                FString::Printf(
+                                    TEXT("%s should start with M_."),
+                                    *MaterialName
+                                ),
+                                TEXT("Consistent material naming makes assets easier to identify and manage."),
+                                TEXT("Rename the Material using the M_ prefix.")
+                            }
                         );
                     }
 
@@ -411,6 +622,19 @@ namespace GameReadyAssetCheckerChecks
                                 ),
                                 *TextureName
                             );
+
+                            Results.Add(
+                                {
+                                    AssetName,
+                                    ECheckSeverity::Passed,
+                                    FString::Printf(
+                                        TEXT("%s follows the Texture naming convention."),
+                                        *TextureName
+                                    ),
+                                    TEXT("The texture follows the expected Unreal naming convention."),
+                                    TEXT("No action required.")
+                                }
+                            );
                         }
                         else
                         {
@@ -422,6 +646,19 @@ namespace GameReadyAssetCheckerChecks
                                     "WARNING: Texture should start with T_."
                                 ),
                                 *TextureName
+                            );
+
+                            Results.Add(
+                                {
+                                    AssetName,
+                                    ECheckSeverity::Warning,
+                                    FString::Printf(
+                                        TEXT("%s should start with T_."),
+                                        *TextureName
+                                    ),
+                                    TEXT("Consistent texture naming makes assets easier to identify and manage."),
+                                    TEXT("Rename the texture using the T_ prefix.")
+                                }
                             );
                         }
 
@@ -446,10 +683,27 @@ namespace GameReadyAssetCheckerChecks
                                     "WARNING: Large texture found - "
                                     "%s (%dx%d)."
                                 ),
-                                *Asset.AssetName.ToString(),
+                                *AssetName,
                                 *Texture2D->GetName(),
                                 Width,
                                 Height
+                            );
+
+                            Results.Add(
+                                {
+                                    AssetName,
+                                    ECheckSeverity::Warning,
+                                    FString::Printf(
+                                        TEXT(
+                                            "Large texture found - %s (%dx%d)."
+                                        ),
+                                        *Texture2D->GetName(),
+                                        Width,
+                                        Height
+                                    ),
+                                    TEXT("Very large textures can increase memory usage and may be unnecessary for the asset."),
+                                    TEXT("Consider reducing the texture resolution if the asset does not require it.")
+                                }
                             );
                         }
                     }
@@ -465,7 +719,17 @@ namespace GameReadyAssetCheckerChecks
                         "Game-Ready Asset Checker: %s - PASS: "
                         "No textures at or above 4096x4096 found."
                     ),
-                    *Asset.AssetName.ToString()
+                    *AssetName
+                );
+
+                Results.Add(
+                    {
+                        AssetName,
+                        ECheckSeverity::Passed,
+                        TEXT("No textures at or above 4096x4096 found."),
+                        TEXT("The scanned textures are below the current large-texture threshold."),
+                        TEXT("No action required.")
+                    }
                 );
             }
         }
@@ -479,5 +743,7 @@ namespace GameReadyAssetCheckerChecks
             ),
             StaticMeshCount
         );
+
+        return Results;
     }
 }
