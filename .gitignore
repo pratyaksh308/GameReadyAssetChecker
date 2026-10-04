@@ -14,6 +14,13 @@ Saved/
 # Rider
 .idea/
 
+# VS Code
+.vscode/
+
+# Unreal generated solution/project files
+*.sln
+*.slnx
+
 # Build outputs
 *.pdb
 *.obj
@@ -24,11 +31,6 @@ Saved/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Unreal generated solution/project files
-*.sln
-*.slnx
-.vscode/
 
 # Unreal test project content
 /Content/
