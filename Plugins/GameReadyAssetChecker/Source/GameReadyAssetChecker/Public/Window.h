@@ -44,8 +44,17 @@ private:
         GameReadyAssetCheckerChecks::ECheckSeverity Severity
     ) const;
 
+    FText GetSeverityText(
+        GameReadyAssetCheckerChecks::ECheckSeverity Severity
+    ) const;
+
+    FSlateColor GetSeverityColor(
+        GameReadyAssetCheckerChecks::ECheckSeverity Severity
+    ) const;
+
     TSharedPtr<STextBlock> SelectedAssetsText;
     TSharedPtr<STextBlock> SummaryText;
+    TSharedPtr<STextBlock> ResultsHeaderText;
     TSharedPtr<SVerticalBox> ResultsContainer;
 
     TArray<GameReadyAssetCheckerChecks::FCheckResult> CheckResults;
