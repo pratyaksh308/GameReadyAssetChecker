@@ -610,120 +610,60 @@ void SGameReadyAssetCheckerWindow::RefreshResults()
             }
         }
 
-        ResultsContainer->AddSlot()
+        TSharedRef<SVerticalBox> AssetContent =
+            SNew(SVerticalBox);
+
+        AssetContent->AddSlot()
             .AutoHeight()
-            .Padding(0.0f, 0.0f, 0.0f, 10.0f)
+            .Padding(0.0f, 0.0f, 0.0f, 8.0f)
             [
-                SNew(SBorder)
-                    .Padding(10.0f)
+                SNew(SHorizontalBox)
+
+                    + SHorizontalBox::Slot()
+                    .FillWidth(1.0f)
+                    .VAlign(VAlign_Center)
                     [
-                        SNew(SVerticalBox)
+                        SNew(STextBlock)
+                            .Text(
+                                FText::FromString(
+                                    AssetName
+                                )
+                            )
+                            .Font(
+                                FCoreStyle::
+                                GetDefaultFontStyle(
+                                    TEXT("Bold"),
+                                    11
+                                )
+                            )
+                    ]
 
-                            + SVerticalBox::Slot()
-                            .AutoHeight()
-                            .Padding(0.0f, 0.0f, 0.0f, 8.0f)
-                            [
-                                SNew(SHorizontalBox)
-
-                                    + SHorizontalBox::Slot()
-                                    .FillWidth(1.0f)
-                                    .VAlign(VAlign_Center)
-                                    [
-                                        SNew(STextBlock)
-                                            .Text(
-                                                FText::FromString(
-                                                    AssetName
-                                                )
-                                            )
-                                            .Font(
-                                                FCoreStyle::
-                                                GetDefaultFontStyle(
-                                                    TEXT("Bold"),
-                                                    11
-                                                )
-                                            )
-                                    ]
-
-                                + SHorizontalBox::Slot()
-                                    .AutoWidth()
-                                    .VAlign(VAlign_Center)
-                                    [
-                                        SNew(STextBlock)
-                                            .Text(
-                                                FText::Format(
-                                                    FText::FromString(
-                                                        TEXT(
-                                                            "{0} Passed  |  {1} Warnings  |  {2} Errors"
-                                                        )
-                                                    ),
-                                                    AssetPassedCount,
-                                                    AssetWarningCount,
-                                                    AssetErrorCount
-                                                )
-                                            )
-                                            .Font(
-                                                FCoreStyle::
-                                                GetDefaultFontStyle(
-                                                    TEXT("Regular"),
-                                                    9
-                                                )
-                                            )
-                                    ]
-                            ]
-
-                        + SVerticalBox::Slot()
-                            .AutoHeight()
-                            [
-                                SNew(SVerticalBox)
-                            ]
+                + SHorizontalBox::Slot()
+                    .AutoWidth()
+                    .VAlign(VAlign_Center)
+                    [
+                        SNew(STextBlock)
+                            .Text(
+                                FText::Format(
+                                    FText::FromString(
+                                        TEXT(
+                                            "{0} Passed  |  {1} Warnings  |  {2} Errors"
+                                        )
+                                    ),
+                                    AssetPassedCount,
+                                    AssetWarningCount,
+                                    AssetErrorCount
+                                )
+                            )
+                            .Font(
+                                FCoreStyle::
+                                GetDefaultFontStyle(
+                                    TEXT("Regular"),
+                                    9
+                                )
+                            )
                     ]
             ];
-
-        SVerticalBox* AssetResultsBox = nullptr;
-
-        const int32 LastCardIndex =
-            ResultsContainer->GetChildren()->Num() - 1;
-
-        if (LastCardIndex >= 0)
-        {
-            TSharedRef<SWidget> LastWidget =
-                ResultsContainer->GetChildren()->GetChildAt(
-                    LastCardIndex
-                );
-
-            TSharedPtr<SBorder> CardBorder =
-                StaticCastSharedRef<SBorder>(
-                    LastWidget
-                );
-
-            TSharedPtr<SWidget> CardChild =
-                CardBorder->GetContent();
-
-            if (CardChild.IsValid())
-            {
-                TSharedPtr<SVerticalBox> CardBox =
-                    StaticCastSharedPtr<SVerticalBox>(
-                        CardChild
-                    );
-
-                if (CardBox.IsValid() &&
-                    CardBox->GetChildren()->Num() > 1)
-                {
-                    TSharedPtr<SWidget> ResultsWidget =
-                        CardBox->GetChildren()->GetChildAt(1);
-
-                    AssetResultsBox =
-                        static_cast<SVerticalBox*>(
-                            ResultsWidget.Get()
-                            );
-                }
-            }
-        }
-
-        if (!AssetResultsBox)
-        {
-            continue;
-        }
 
         for (const GameReadyAssetCheckerChecks::FCheckResult&
             Result : FilteredResults)
@@ -733,7 +673,7 @@ void SGameReadyAssetCheckerWindow::RefreshResults()
                 continue;
             }
 
-            AssetResultsBox->AddSlot()
+            AssetContent->AddSlot()
                 .AutoHeight()
                 .Padding(0.0f, 3.0f)
                 [
@@ -835,5 +775,16 @@ void SGameReadyAssetCheckerWindow::RefreshResults()
                         ]
                 ];
         }
+
+        ResultsContainer->AddSlot()
+            .AutoHeight()
+            .Padding(0.0f, 0.0f, 0.0f, 10.0f)
+            [
+                SNew(SBorder)
+                    .Padding(10.0f)
+                    [
+                        AssetContent
+                    ]
+            ];
     }
 }
